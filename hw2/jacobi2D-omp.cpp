@@ -32,36 +32,23 @@ void jacobi2d(double *u, double *f, long N, long n_itr) {
   long M = N + 2;
   double h2 = 1.0 / ((N + 1) * (N + 1));
   double *u_tmp = (double *)malloc(M * M * sizeof(double));
+  cp_arr(u, u_tmp, M * M);
 
+  for (long k = 0; k < n_itr; k++) {
+    double *tmp = u;
+    u = u_tmp;
+    u_tmp = tmp;
 #ifdef _OPENMP
-#pragma omp parallel shared(u, u_tmp, M, N, h2)
-  { // start of parallel region
-    int tid = omp_get_thread_num();
+#pragma omp parallel for collapse(2) shared(u, u_tmp, N, M, h2, f)
 #endif
-    for (long k = 0; k < n_itr; k++) {
-#ifdef _OPENMP
-      if (tid == 0)
-#endif
-        cp_arr(u, u_tmp, M * M);
-
-#ifdef _OPENMP
-#pragma omp barrier
-#endif
-
-#ifdef _OPENMP
-#pragma omp for collapse(2)
-#endif
-      for (long i = 1; i <= N; i++) {
-        for (long j = 1; j <= N; j++) {
-          u[i * M + j] = 0.25 * (h2 * f[(i - 1) * N + (j - 1)] +
-                                 u_tmp[(i - 1) * M + j] + u_tmp[i * M + j - 1] +
-                                 u_tmp[(i + 1) * M + j] + u_tmp[i * M + j + 1]);
-        }
+    for (long i = 1; i <= N; i++) {
+      for (long j = 1; j <= N; j++) {
+        u[i * M + j] = 0.25 * (h2 * f[(i - 1) * N + (j - 1)] +
+                               u_tmp[(i - 1) * M + j] + u_tmp[i * M + j - 1] +
+                               u_tmp[(i + 1) * M + j] + u_tmp[i * M + j + 1]);
       }
     }
-#ifdef _OPENMP
-  } // end of parallel region
-#endif
+  }
 
   free(u_tmp);
 }
@@ -73,6 +60,9 @@ double calc_res(double *u, double *f, long N) {
   double ih2 = (N + 1) * (N + 1);
   double Du;
 
+#ifdef _OPENMP
+#pragma omp parallel for collapse(2) shared(M,N,ih2) private(Du) reduction(+:res)
+#endif
   for (long i = 1; i <= N; i++) {
     for (long j = 1; j <= N; j++) {
       Du = ih2 * (-u[(i - 1) * M + j] - u[i * M + j - 1] + 4 * u[i * M + j] -
@@ -91,8 +81,8 @@ int main(int argc, char const *argv[]) {
   omp_set_num_threads(4);
 #endif
 
-  long n_itr = 20000;
-  long N = 200;
+  long n_itr = 10000;
+  long N = 1000;
   long M = N + 2; // 0 and N+1 for the boundary
   double *u = (double *)malloc(M * M * sizeof(double));
   double *f = (double *)malloc(N * N * sizeof(double));

@@ -26,7 +26,10 @@ void gs2d(double *u, double *f, long N, long n_itr) {
   double h2 = 1.0 / ((N + 1) * (N + 1));
 
   for (long k = 0; k < n_itr; k++) {
-    /* update red points */
+/* update red points */
+#ifdef _OPENMP
+#pragma omp parallel for shared(M, N, u, h2, f)
+#endif
     for (long i = 1; i <= N; i++) {
       for (long j = (i + 1) % 2 + 1; j <= N; j += 2) {
         u[i * M + j] =
@@ -34,7 +37,11 @@ void gs2d(double *u, double *f, long N, long n_itr) {
                     u[i * M + j - 1] + u[(i + 1) * M + j] + u[i * M + j + 1]);
       }
     }
-    /* update black points */
+
+/* update black points */
+#ifdef _OPENMP
+#pragma omp parallel for shared(M, N, u, h2, f)
+#endif
     for (long i = 1; i <= N; i++) {
       for (long j = i % 2 + 1; j <= N; j += 2) {
         u[i * M + j] =
@@ -52,6 +59,9 @@ double calc_res(double *u, double *f, long N) {
   double ih2 = (N + 1) * (N + 1);
   double Du;
 
+#ifdef _OPENMP
+#pragma omp parallel for collapse(2) shared(M,N,ih2) private(Du) reduction(+:res)
+#endif
   for (long i = 1; i <= N; i++) {
     for (long j = 1; j <= N; j++) {
       Du = ih2 * (-u[(i - 1) * M + j] - u[i * M + j - 1] + 4 * u[i * M + j] -
@@ -67,11 +77,11 @@ double calc_res(double *u, double *f, long N) {
 int main(int argc, char const *argv[]) {
 
 #ifdef _OPENMP
-  omp_set_num_threads(4);
+  omp_set_num_threads(1);
 #endif
 
-  long n_itr = 20000;
-  long N = 200;
+  long n_itr = 10000;
+  long N = 100;
   long M = N + 2; // 0 and N+1 for the boundary
   double *u = (double *)malloc(M * M * sizeof(double));
   double *f = (double *)malloc(N * N * sizeof(double));
