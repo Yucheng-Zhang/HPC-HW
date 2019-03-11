@@ -81,8 +81,8 @@ int main(int argc, char const *argv[]) {
   omp_set_num_threads(4);
 #endif
 
-  long n_itr = 10000;
-  long N = 1000;
+  long n_itr = 300;
+  long N = 12;
   long M = N + 2; // 0 and N+1 for the boundary
   double *u = (double *)malloc(M * M * sizeof(double));
   double *f = (double *)malloc(N * N * sizeof(double));
