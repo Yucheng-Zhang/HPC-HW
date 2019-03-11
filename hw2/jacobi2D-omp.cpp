@@ -35,6 +35,7 @@ void jacobi2d(double *u, double *f, long N, long n_itr) {
   cp_arr(u, u_tmp, M * M);
 
   for (long k = 0; k < n_itr; k++) {
+    // swap the pointers
     double *tmp = u;
     u = u_tmp;
     u_tmp = tmp;
@@ -61,7 +62,7 @@ double calc_res(double *u, double *f, long N) {
   double Du;
 
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) shared(M,N,ih2) private(Du) reduction(+:res)
+#pragma omp parallel for shared(M, N, ih2) private(Du) reduction(+ : res)
 #endif
   for (long i = 1; i <= N; i++) {
     for (long j = 1; j <= N; j++) {
@@ -78,11 +79,11 @@ double calc_res(double *u, double *f, long N) {
 int main(int argc, char const *argv[]) {
 
 #ifdef _OPENMP
-  omp_set_num_threads(4);
+  omp_set_num_threads(2);
 #endif
 
-  long n_itr = 300;
-  long N = 12;
+  long n_itr = 100;
+  long N = 1000;
   long M = N + 2; // 0 and N+1 for the boundary
   double *u = (double *)malloc(M * M * sizeof(double));
   double *f = (double *)malloc(N * N * sizeof(double));
@@ -91,8 +92,8 @@ int main(int argc, char const *argv[]) {
   init_f(f, N);
 
   printf(">> N = %ld\n", N);
-  double i_res = calc_res(u, f, N);
-  printf(">> Initial norm of residual: %.2e\n", i_res);
+  // double i_res = calc_res(u, f, N);
+  //  printf(">> Initial norm of residual: %.2e\n", i_res);
 
   Timer t;
 
@@ -104,9 +105,9 @@ int main(int argc, char const *argv[]) {
 
   printf(":: Time elapsed: %lf s\n", tt);
 
-  double f_res = calc_res(u, f, N);
-  printf(":: Final norm of residual: %.2e\n", f_res);
-  printf(":: Residual is decreased by a factor of: %.2e\n", i_res / f_res);
+  //  double f_res = calc_res(u, f, N);
+  //  printf(":: Final norm of residual: %.2e\n", f_res);
+  //  printf(":: Residual is decreased by a factor of: %.2e\n", i_res / f_res);
 
   free(u);
   free(f);

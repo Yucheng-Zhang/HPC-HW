@@ -60,7 +60,7 @@ double calc_res(double *u, double *f, long N) {
   double Du;
 
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) shared(M,N,ih2) private(Du) reduction(+:res)
+#pragma omp parallel for collapse(2) shared(M, N, ih2) private(Du) reduction(+:res)
 #endif
   for (long i = 1; i <= N; i++) {
     for (long j = 1; j <= N; j++) {
@@ -77,11 +77,11 @@ double calc_res(double *u, double *f, long N) {
 int main(int argc, char const *argv[]) {
 
 #ifdef _OPENMP
-  omp_set_num_threads(1);
+  omp_set_num_threads(8);
 #endif
 
-  long n_itr = 10000;
-  long N = 100;
+  long n_itr = 100;
+  long N = 20000;
   long M = N + 2; // 0 and N+1 for the boundary
   double *u = (double *)malloc(M * M * sizeof(double));
   double *f = (double *)malloc(N * N * sizeof(double));
@@ -90,8 +90,8 @@ int main(int argc, char const *argv[]) {
   init_f(f, N);
 
   printf(">> N = %ld\n", N);
-  double i_res = calc_res(u, f, N);
-  printf(">> Initial norm of residual: %.2e\n", i_res);
+  //  double i_res = calc_res(u, f, N);
+  //  printf(">> Initial norm of residual: %.2e\n", i_res);
 
   Timer t;
 
@@ -103,9 +103,9 @@ int main(int argc, char const *argv[]) {
 
   printf(":: Time elapsed: %lf s\n", tt);
 
-  double f_res = calc_res(u, f, N);
-  printf(":: Final norm of residual: %.2e\n", f_res);
-  printf(":: Residual is decreased by a factor of: %.2e\n", i_res / f_res);
+  //  double f_res = calc_res(u, f, N);
+  //  printf(":: Final norm of residual: %.2e\n", f_res);
+  // printf(":: Residual is decreased by a factor of: %.2e\n", i_res / f_res);
 
   free(u);
   free(f);

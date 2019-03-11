@@ -52,11 +52,24 @@
 
 ## 4. OpenMP version of 2D Jacobi/Gauss-Seidel smoothing.
 
-- Jacobi method
-  - The following table shows the timings for different values of `N` and different numbers of threads.
+- The following table shows the timings for different values of `N` and different numbers of threads. Number of iterations is `100`.
 
-| `N_thread` | `N=100` |       |
-| :--------: | :-----: | :---: |
-|    `1`     |         |       |
+- Jacobi method
+
+| `N_thread` |   `N=100`    |   `N=1000`   |  `N=10,000`   |  `N=20,000`   |
+| :--------: | :----------: | :----------: | :-----------: | :-----------: |
+|    `1`     | `0.002660 s` | `0.209642 s` | `19.760169 s` | `81.583017 s` |
+|    `2`     | `0.004587 s` | `0.163366 s` | `13.533498 s` | `54.148035 s` |
+|    `4`     | `0.005771 s` | `0.136099 s` | `12.947494 s` | `53.681173 s` |
+|    `8`     | `0.007180 s` | `0.143475 s` | `13.939527 s` | `69.407606 s` |
 
 - Gauss-Seidel method
+
+| `N_thread` |   `N=100`    |   `N=1000`   |  `N=10,000`   |  `N=20,000`   |
+| :--------: | :----------: | :----------: | :-----------: | :-----------: |
+|    `1`     | `0.001833 s` | `0.204328 s` | `23.346515 s` | `94.526992 s` |
+|    `2`     | `0.006006 s` | `0.186694 s` | `19.875444 s` | `78.298179 s` |
+|    `4`     | `0.009349 s` | `0.177580 s` | `19.546787 s` | `79.597596 s` |
+|    `8`     | `0.011964 s` | `0.199010 s` | `20.717127 s` | `81.617238 s` |
+
+- We can see that for large `N`, `2 threads` work better than `1 thread`, but more threads (`4` and `8`) don't really perform better. I think it's related to the memory bandwidth and also the fact that I'm using other softwares during the timing.
