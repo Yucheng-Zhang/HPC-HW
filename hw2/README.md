@@ -2,6 +2,17 @@
 
 - Yucheng Zhang
 
+## 0. Machine
+- MacBook Pro 2017
+- Compiler version: `g++ (Homebrew GCC 8.2.0) 8.2.0`.
+- CPU: `Intel(R) Core(TM) i7-7700HQ CPU @ 2.80Ghz`.
+  - Details: <https://ark.intel.com/products/97185/Intel-Core-i7-7700HQ-Processor-6M-Cache-up-to-3-80-GHz->.
+  - Cores: `4`, Threads: `8`.
+  - Max turbo frequency: `3.80 GHz`.
+  - Operations per cycle: `16 DP FLOPs/cycle` for Intel Kaby Lake as found here <https://stackoverflow.com/a/15657772>.
+  - Max flop rate: `Cores * Max turbo frequency * Operations per cycle = 243.2 Gflop/s`.
+  - Max memory bandwidth: `37.5 GB/s` for 2 channels.
+
 ## 1. Finding Memory bugs.
 
 - See comments in the code.
@@ -30,7 +41,7 @@
 
 - Parallelize your matrix-matrix multiplication code using OpenMP.
   - I parallelize the code on the for loop over blocks in C.
-  - One thing to notice is how the cache is shared by all the threads. The optimal `BLOCK_SIZE` may be different when we use different number of threads. For example, when I use OpenMP with more than one thread, `BLOCK_SIZE = 32` works better than `BLOCK_SIZE = 64` in the serial case.
+  - One thing to notice is how the cache is shared by all the threads. The optimal `BLOCK_SIZE` may be different when we use different number of threads. For example, when I use OpenMP with more than one thread, `BLOCK_SIZE = 32` works better than `BLOCK_SIZE = 64`, which is optimal in the serial case.
 
 - What percentage of the peak FLOP-rate do you achieve with your code?
   - I can achieve up to `22.6 %` of the peak FLOP-rate.
@@ -40,3 +51,12 @@
 - See comments in the code.
 
 ## 4. OpenMP version of 2D Jacobi/Gauss-Seidel smoothing.
+
+- Jacobi method
+  - The following table shows the timings for different values of `N` and different numbers of threads.
+
+| `N_thread` | `N=100` |       |
+| :--------: | :-----: | :---: |
+|    `1`     |         |       |
+
+- Gauss-Seidel method
