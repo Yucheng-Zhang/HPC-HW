@@ -81,7 +81,7 @@ int main(int argc, char const *argv[]) {
 #endif
 
   long n_itr = 100;
-  long N = 20000;
+  long N = 1000;
   long M = N + 2; // 0 and N+1 for the boundary
   double *u = (double *)malloc(M * M * sizeof(double));
   double *f = (double *)malloc(N * N * sizeof(double));
