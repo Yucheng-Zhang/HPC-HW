@@ -1,11 +1,11 @@
 CC=g++
 
-CFLAGS = -O3 -Wall
+CFLAGS = -O3 -Wall -std=c++11 -march=native
 
 all:
 	$(CC) $(CFLAGS) val_test01_solved.cpp -o val_test01_solved
 	$(CC) $(CFLAGS) val_test02_solved.cpp -o val_test02_solved
-	$(CC) $(CFLAGS) -fopenmp -march=native MMult1.cpp -o MMult1
+	$(CC) $(CFLAGS) -fopenmp MMult1.cpp -o MMult1
 	$(CC) $(CFLAGS) -fopenmp omp_solved2.c -o omp_solved2
 	$(CC) $(CFLAGS) -fopenmp omp_solved3.c -o omp_solved3
 	$(CC) $(CFLAGS) -fopenmp omp_solved4.c -o omp_solved4
@@ -16,7 +16,7 @@ all:
 
 EXES = val_test01_solved val_test02_solved MMult1 \
 		omp_solved2 omp_solved3 omp_solved4 omp_solved5 omp_solved6 \
-		jacobi2D-omp gs2D-omp 
+		jacobi2D-omp gs2D-omp
 
 clean:
 	rm -rf $(EXES)

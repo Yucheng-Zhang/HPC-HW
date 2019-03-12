@@ -15,7 +15,8 @@
 
 ## 1. Finding Memory bugs.
 
-- See comments in the code.
+1. Index exceeds the array range; `free()` should be used for memory allocated by `maclloc`.
+2. Variable is used before initialized, while valgrind does not complain about this.
 
 ## 2. Optimizing matrix-matrix multiplication.
 
@@ -48,11 +49,15 @@
 
 ## 3. Finding OpenMP bugs.
 
-- See comments in the code.
+2. `reduction` should be used for simple sum. `int` and `float` may not be large enough in some case, which might depend on the machine.
+3. For a function which may not be excuted by all threads, `#pragma omp barrier` inside may cause the program to get stuck.
+4. `private` stack size is not very large.
+5. `lock` may cause the program to get stuck if not used properly.
+6. We may use global variables in order to be shared easily.
 
 ## 4. OpenMP version of 2D Jacobi/Gauss-Seidel smoothing.
 
-- The following table shows the timings for different values of `N` and different numbers of threads. Number of iterations is `100`.
+- The following tables show the timings for different values of `N` and different numbers of threads. Number of iterations is `100`.
 
 - Jacobi method
 
@@ -73,3 +78,19 @@
 |    `8`     | `0.011964 s` | `0.199010 s` | `20.717127 s` | `81.617238 s` |
 
 - We can see that for large `N`, `2 threads` work better than `1 thread`, but more threads (`4` and `8`) don't really perform better. I think it's related to the memory bandwidth and also the fact that I'm using other softwares during the timing.
+
+- I also test the code on anther machine, which has `Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz`, with `24` cores and `1` thread per core. Timings are summarized below, with `100` iterations and `N=20,000`.
+
+- Jacobi method
+
+| `N_thread` |     `1`      |     `2`     |     `4`     |     `8`     |    `16`     |    `24`     |
+| :--------: | :----------: | :---------: | :---------: | :---------: | :---------: | :---------: |
+| `Time (s)` | `137.929256` | `66.865910` | `38.367468` | `25.794236` | `21.755469` | `21.025227` |
+
+- Gauss-Seidel method
+
+| `N_thread` |     `1`      |      `2`      |    `4`     |     `8`     |    `16`     |    `24`     |
+| :--------: | :----------: | :-----------: | :--------: | :---------: | :---------: | :---------: |
+| `Time (s)` | `172.466722` | `81.096346 s` | `43.46177` | `26.440732` | `21.187021` | `21.504986` |
+
+- We see that on this more stable machine, we can reduce the time to half if we double the number of threads until `N_thread = 8`. For more threads, the performance may be restricted by the cache size and bandwidth.
