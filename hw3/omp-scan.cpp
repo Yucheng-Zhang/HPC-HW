@@ -20,8 +20,9 @@ void scan_omp(long *prefix_sum, const long *A, long n) {
     return;
 
   int p, tid;
+  long ktid, ktid1;
 
-#pragma omp parallel shared(prefix_sum, A, p) private(tid)
+#pragma omp parallel shared(prefix_sum, A, p, n) private(tid, ktid, ktid1)
   {
     tid = omp_get_thread_num();
     if (tid == 0) {
@@ -29,8 +30,8 @@ void scan_omp(long *prefix_sum, const long *A, long n) {
       printf(">> number of threads: %d\n", p);
     }
 #pragma omp barrier
-    long ktid = tid * (n / p);
-    long ktid1 = (tid + 1) * (n / p);
+    ktid = tid * (n / p);
+    ktid1 = (tid + 1) * (n / p);
     prefix_sum[ktid] = 0;
     for (long i = ktid + 1; i < ktid1; i++) {
       prefix_sum[i] = prefix_sum[i - 1] + A[i - 1];
