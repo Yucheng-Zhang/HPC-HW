@@ -79,7 +79,7 @@ __global__ void reduction_kernel(double* sum, const double* a, long N){
 }
 
 int main() {
-  long N = (1UL<<16);
+  long N = (1UL<<14);
 
   /* Initialize vector and matrix */
   double *a, *m;
