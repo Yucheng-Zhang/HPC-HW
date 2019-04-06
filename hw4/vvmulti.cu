@@ -3,15 +3,11 @@
 #include <omp.h>
 #include <string>
 
-void mvmulti(double* sum_ptr, const double* a, const double* m, long N){
-  for (long i = 0; i < N; i++) {
-    double sum = 0;
-    #pragma omp parallel for schedule(static) reduction(+:sum)
-    for (long j = 0; j < N; j++) {
-      sum += m[i * N + j] * a[j];
-    }
-    sum_ptr[i] = sum;
-  }
+void vvmulti(double* sum_ptr, const double* a, const double* b, long N){
+  double sum = 0;
+  #pragma omp parallel for schedule(static) reduction(+:sum)
+  for (long i = 0; i < N; i++) sum += a[i] * b[i];
+  *sum_ptr = sum;
 }
 
 #define BLOCK_SIZE 1024
@@ -81,68 +77,55 @@ __global__ void reduction_kernel(double* sum, const double* a, long N){
 int main() {
   long N = (1UL<<25);
 
-  /* Initialize vector and matrix */
-  double *a, *m;
+  /* Initialize two vectors */
+  double *a, *b;
   cudaMallocHost((void**)&a, N*sizeof(double));
-  cudaMallocHost((void**)&m, N*N*sizeof(double));
+  cudaMallocHost((void**)&b, N*sizeof(double));
   #pragma omp parallel for schedule(static)
   for (long i = 0; i < N; i++) {
     a[i] = 1.0 / (i+1);
-    for (long j = 0; j < N; j++) {
-      m[i * N + j] = 1.0; // row major order
-    }
+    b[i] = 1.0;
   }
 
   /* CPU reference */
-  double *sum_ref;
-  cudaMallocHost((void**)&sum_ref, N*sizeof(double));
+  double sum_ref;
   double tt = omp_get_wtime();
-  mvmulti(sum_ref, a, b, N);
-  printf("CPU Bandwidth = %f GB/s\n", (N+1)*N*sizeof(double)/(omp_get_wtime()-tt)/1e9);
+  vvmulti(&sum_ref, a, b, N);
+  printf("CPU Bandwidth = %f GB/s\n", 2*N*sizeof(double) / (omp_get_wtime()-tt)/1e9);
 
   /* GPU */
-  double *sum;
-  cudaMallocHost((void**)&sum, N*sizeof(double));
-
-  double *a_d, *m_d, *sum_d;
+  double *a_d, *b_d, *sum_d;
   cudaMalloc(&a_d, N*sizeof(double));
-  cudaMalloc(&m_d, N*N*sizeof(double));
+  cudaMalloc(&b_d, N*sizeof(double));
   cudaMalloc(&sum_d, ((N+BLOCK_SIZE-1)/BLOCK_SIZE)*sizeof(double));
   
   /* Copy Host data to device */
   cudaMemcpyAsync(a_d, a, N*sizeof(double), cudaMemcpyHostToDevice);
   cudaDeviceSynchronize();
-  cudaMemcpyAsync(m_d, m, N*N*sizeof(double), cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(b_d, b, N*sizeof(double), cudaMemcpyHostToDevice);
   cudaDeviceSynchronize();
   tt = omp_get_wtime();
 
-  for (long i = 0; i < N; i++){
-    long Nb = (N+BLOCK_SIZE-1)/BLOCK_SIZE;
-    vvmulti_kernel<<<Nb,BLOCK_SIZE>>>(sum_d, a_d, m_d+i*N, N);
-    while (Nb > 1) {
-      long N = Nb;
-      Nb = (Nb+BLOCK_SIZE-1)/(BLOCK_SIZE);
-      reduction_kernel<<<Nb,BLOCK_SIZE>>>(sum_d+Nb, sum_d, N);
-      sum_d += Nb;
-    }
-  double sum_tmp;
-  cudaMemcpyAsync(&sum_tmp, sum_d, 1*sizeof(double), cudaMemcpyDeviceToHost);
-  cudaDeviceSynchronize();
-  sum[i] = sum_tmp;
+  long Nb = (N+BLOCK_SIZE-1)/BLOCK_SIZE;
+  vvmulti_kernel<<<Nb,BLOCK_SIZE>>>(sum_d, a_d, b_d, N);
+  while (Nb > 1) {
+    long N = Nb;
+    Nb = (Nb+BLOCK_SIZE-1)/(BLOCK_SIZE);
+    reduction_kernel<<<Nb,BLOCK_SIZE>>>(sum_d+Nb, sum_d, N);
+    sum_d += Nb;
   }
-  
-  printf("GPU Bandwidth = %f GB/s\n", (N+1)*N*sizeof(double)/(omp_get_wtime()-tt)/1e9);
 
-  double max_err = 0;
-  for (long i = 0; i < N; i++)
-    max_err = std::max(max_err, fabs(sum[i] - sum_ref[i]));
-  printf("Error = %f\n", max_err);
+  double sum;
+  cudaMemcpyAsync(&sum, sum_d, 1*sizeof(double), cudaMemcpyDeviceToHost);
+  cudaDeviceSynchronize();
+  printf("GPU Bandwidth = %f GB/s\n", 2*N*sizeof(double) / (omp_get_wtime()-tt)/1e9);
+  printf("Error = %f\n", fabs(sum-sum_ref));
 
   cudaFree(a_d);
-  cudaFree(m_d);
+  cudaFree(b_d);
   cudaFree(sum_d);
   cudaFreeHost(a);
-  cudaFreeHost(m);
+  cudaFreeHost(b);
 
   return 0;
 }
