@@ -43,6 +43,37 @@ __global__ void vvmulti_kernel(double* sum, const double* a, const double* b, lo
   }
 }
 
+__global__ void reduction_kernel(double* sum, const double* a, long N){
+  __shared__ double smem[BLOCK_SIZE];
+  int idx = (blockIdx.x) * blockDim.x + threadIdx.x;
+
+  if (idx < N) smem[threadIdx.x] = a[idx];
+  else smem[threadIdx.x] = 0;
+
+  __syncthreads();
+  if (threadIdx.x < 512) smem[threadIdx.x] += smem[threadIdx.x + 512];
+  __syncthreads();
+  if (threadIdx.x < 256) smem[threadIdx.x] += smem[threadIdx.x + 256];
+  __syncthreads();
+  if (threadIdx.x < 128) smem[threadIdx.x] += smem[threadIdx.x + 128];
+  __syncthreads();
+  if (threadIdx.x <  64) smem[threadIdx.x] += smem[threadIdx.x +  64];
+  __syncthreads();
+  if (threadIdx.x <  32) {
+    smem[threadIdx.x] += smem[threadIdx.x +  32];
+    __syncwarp();
+    smem[threadIdx.x] += smem[threadIdx.x +  16];
+    __syncwarp();
+    smem[threadIdx.x] += smem[threadIdx.x +   8];
+    __syncwarp();
+    smem[threadIdx.x] += smem[threadIdx.x +   4];
+    __syncwarp();
+    smem[threadIdx.x] += smem[threadIdx.x +   2];
+    __syncwarp();
+    if (threadIdx.x == 0) sum[blockIdx.x] = smem[0] + smem[1];
+  }
+}
+
 int main() {
   long N = (1UL<<25);
 
@@ -80,7 +111,7 @@ int main() {
   while (Nb > 1) {
     long N = Nb;
     Nb = (Nb+BLOCK_SIZE-1)/(BLOCK_SIZE);
-    vvmulti_kernel<<<Nb,BLOCK_SIZE>>>(sum_d+Nb, sum_d, N);
+    reduction_kernel<<<Nb,BLOCK_SIZE>>>(sum_d+Nb, sum_d, N);
     sum_d += Nb;
   }
 
