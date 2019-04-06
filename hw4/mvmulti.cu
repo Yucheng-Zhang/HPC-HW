@@ -79,7 +79,7 @@ __global__ void reduction_kernel(double* sum, const double* a, long N){
 }
 
 int main() {
-  long N = (1UL<<25);
+  long N = (1UL<<16);
 
   /* Initialize vector and matrix */
   double *a, *m;
@@ -97,7 +97,7 @@ int main() {
   double *sum_ref;
   cudaMallocHost((void**)&sum_ref, N*sizeof(double));
   double tt = omp_get_wtime();
-  mvmulti(sum_ref, a, b, N);
+  mvmulti(sum_ref, a, m, N);
   printf("CPU Bandwidth = %f GB/s\n", (N+1)*N*sizeof(double)/(omp_get_wtime()-tt)/1e9);
 
   /* GPU */
