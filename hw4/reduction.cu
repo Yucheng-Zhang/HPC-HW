@@ -126,7 +126,9 @@ int main() {
 
   double *x_d, *y_d;
   cudaMalloc(&x_d, N*sizeof(double));
-  cudaMalloc(&y_d, ((N+BLOCK_SIZE-1)/BLOCK_SIZE)*sizeof(double));
+  long N_work = 1;
+  for (long i = (N+BLOCK_SIZE-1)/(BLOCK_SIZE); i > 1; i = (i+BLOCK_SIZE-1)/(BLOCK_SIZE)) N_work += i;
+  cudaMalloc(&y_d, N_work*sizeof(double)); // extra memory buffer for reduction across thread-blocks
 
   cudaMemcpyAsync(x_d, x, N*sizeof(double), cudaMemcpyHostToDevice);
   cudaDeviceSynchronize();
@@ -139,8 +141,8 @@ int main() {
   while (Nb > 1) {
     long N = Nb;
     Nb = (Nb+BLOCK_SIZE-1)/(BLOCK_SIZE);
-    reduction_kernel2<<<Nb,BLOCK_SIZE>>>(sum_d + Nb, sum_d, N);
-    sum_d += Nb;
+    reduction_kernel2<<<Nb,BLOCK_SIZE>>>(sum_d + N, sum_d, N);
+    sum_d += N;
   }
 
 
