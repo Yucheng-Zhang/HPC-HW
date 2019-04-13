@@ -140,7 +140,7 @@ int main(int argc, char const *argv[]) {
     u_tmp = p_tmp;
   }
   cudaDeviceSynchronize();
-  double tt = t.toc();
+  tt = t.toc();
   printf("GPU time = %f s\n", tt);
 
   /* Copy data back to host */
