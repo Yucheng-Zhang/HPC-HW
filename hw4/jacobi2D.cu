@@ -21,6 +21,41 @@ void init_u(double *u, long N) {
   for (long i = 0; i < N * N; i++) u[i] = 0;
 }
 
+/* CPU reference */
+void jacobi2d(double *u, double *f, long N, long n_itr) {
+  long M = N + 2;
+  double h2 = 1.0 / ((N + 1) * (N + 1));
+  double *u_tmp = (double *)malloc(M * M * sizeof(double));
+  cp_arr(u, u_tmp, M * M);
+
+  for (long k = 0; k < n_itr; k++) {
+    // swap the pointers
+    double *tmp = u;
+    u = u_tmp;
+    u_tmp = tmp;
+    #pragma omp parallel for collapse(2) shared(u, u_tmp, N, M, h2, f)
+    for (long i = 1; i <= N; i++) {
+      for (long j = 1; j <= N; j++) {
+        u[i * M + j] = 0.25 * (h2 * f[(i - 1) * N + (j - 1)] +
+                               u_tmp[(i - 1) * M + j] + u_tmp[i * M + j - 1] +
+                               u_tmp[(i + 1) * M + j] + u_tmp[i * M + j + 1]);
+      }
+    }
+  }
+
+  free(u_tmp);
+}
+
+void get_u_ref(double* u_ref, double* u_ref1, long N) {
+  long M = N + 2;
+  #pragma omp parallel for collapse(2)
+  for (long i = 0; i < N; i++) {
+    for (long j = 0; j < N; j++) {
+      u_ref[i * N + j] = u_ref1[(i+1) * M + (j+1)];
+    }
+  }
+}
+
 /* Jacobi GPU kernel */
 __global__ void jacobi_kernel(double* u, double* u_tmp, const double* f_d, long N) {
   __shared__ double smem[BLOCK_DIM+2][BLOCK_DIM+2];
@@ -56,6 +91,19 @@ int main(int argc, char const *argv[]) {
   init_u(u, N);
   init_f(f, N);
 
+  /* CPU reference */
+  double *u_ref, *u_ref1;
+  cudaMallocHost((void**)&u_ref, N * N * sizeof(double));
+  cudaMallocHost((void**)&u_ref1, M * M * sizeof(double));
+  init_u(u_ref, N);
+  t.tic();
+  jacobi2d(u_ref1, f, N, n_itr);
+  double tt = t.toc();
+  printf("CPU time = %f s\n", tt);
+  get_u_ref(u_ref, u_ref1);
+  cudaFreeHost(u_ref1);
+
+
   /* Allocate GPU memory */
   double *u_d, *u_tmp, *f_d;
   cudaMalloc(&u_d, N * N * sizeof(double));
@@ -66,7 +114,7 @@ int main(int argc, char const *argv[]) {
   cudaMemcpy(u_tmp, u, N * N * sizeof(double), cudaMemcpyHostToDevice);
   cudaMemcpy(f_d, f, N * N * sizeof(double), cudaMemcpyHostToDevice);
   double h2 = 1.0 / ((N + 1) * (N + 1));
-  cudaMemcpyToSymbol(h2_d, h2, sizeof(h2));
+  cudaMemcpyToSymbol(&h2_d, &h2, sizeof(double));
 
   dim3 blockDim(BLOCK_DIM, BLOCK_DIM);
   dim3 gridDim(N/(BLOCK_DIM-2)+1, N/(BLOCK_DIM-2)+1);
@@ -83,15 +131,21 @@ int main(int argc, char const *argv[]) {
     u_tmp = p_tmp;
   }
   cudaDeviceSynchronize();
-  tt = t.toc();
+  double tt = t.toc();
   printf("GPU time = %f s\n", tt);
 
   /* Copy data back to host */
   cudaMemcpy(u, u_d, N * N * sizeof(double), cudaMemcpyDeviceToHost);
+
+  /* Print error */
+  double err = 0;
+  for (long i = 0; i < N*N; i++) err = std::max(err, fabs(u[i]-u_ref[i]));
+  printf("Error = %e\n", err);
   
   /* Free memory */
   cudaFreeHost(u);
   cudaFreeHost(f);
+  cudaFreeHost(u_ref);
   cudaFree(u_d);
   cudaFree(u_tmp);
   cudaFree(f_d);
