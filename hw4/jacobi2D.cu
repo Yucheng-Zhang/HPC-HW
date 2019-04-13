@@ -21,6 +21,13 @@ void init_u(double *u, long N) {
   for (long i = 0; i < N * N; i++) u[i] = 0;
 }
 
+/* Copy array a to b. */
+void cp_arr(double *a, double *b, long L) {
+  for (long i = 0; i < L; i++) {
+    b[i] = a[i];
+  }
+}
+
 /* CPU reference */
 void jacobi2d(double *u, double *f, long N, long n_itr) {
   long M = N + 2;
@@ -93,14 +100,16 @@ int main(int argc, char const *argv[]) {
 
   /* CPU reference */
   double *u_ref, *u_ref1;
+  long M = N + 2;
   cudaMallocHost((void**)&u_ref, N * N * sizeof(double));
   cudaMallocHost((void**)&u_ref1, M * M * sizeof(double));
   init_u(u_ref, N);
+  init_u(u_ref1, M);
   t.tic();
   jacobi2d(u_ref1, f, N, n_itr);
   double tt = t.toc();
   printf("CPU time = %f s\n", tt);
-  get_u_ref(u_ref, u_ref1);
+  get_u_ref(u_ref, u_ref1, N);
   cudaFreeHost(u_ref1);
 
 
