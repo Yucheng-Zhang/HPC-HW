@@ -109,6 +109,7 @@ int main(int argc, char const *argv[]) {
   jacobi2d(u_ref1, f, N, n_itr);
   double tt = t.toc();
   printf("CPU time = %f s\n", tt);
+  printf("CPU flops = %f GFlop/s\n", n_itr* 2*(N-2)*(N-2)*4/tt*1e-9);
   get_u_ref(u_ref, u_ref1, N);
   cudaFreeHost(u_ref1);
 
@@ -142,14 +143,15 @@ int main(int argc, char const *argv[]) {
   cudaDeviceSynchronize();
   tt = t.toc();
   printf("GPU time = %f s\n", tt);
+  printf("GPU flops = %f GFlop/s\n", n_itr* 2*(N-2)*(N-2)*4/tt*1e-9);
 
   /* Copy data back to host */
   cudaMemcpy(u, u_d, N * N * sizeof(double), cudaMemcpyDeviceToHost);
 
   /* Print error */
-  double err = 0;
-  for (long i = 0; i < N*N; i++) err = std::max(err, fabs(u[i]-u_ref[i]));
-  printf("Error = %e\n", err);
+//  double err = 0;
+//  for (long i = 0; i < N*N; i++) err = std::max(err, fabs(u[i]-u_ref[i]));
+//  printf("Error = %e\n", err);
   
   /* Free memory */
   cudaFreeHost(u);
