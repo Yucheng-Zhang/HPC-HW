@@ -36,7 +36,7 @@
 ## 2. 2D Jacobi method on a GPU.
 
 - For this problem, I run it on the same five GPUs as used in Problem 1.
-- 
+- I modified the convolution code in `filter.cu` as shown in the lecture, with loading piece of data into shared memory in GPU. This dramatically speeds up the coda.
 
 
 ## 3. Pitch your final project.
@@ -47,3 +47,5 @@ For the final project, `Kaizhe Wang` and I will do the computation of correlatio
 - Include jackknife resampling in the code. The input data points are divided into `njk` parts, where `njk` stands for the number of jackknife regions. For more information about jackknife resampling, see https://en.wikipedia.org/wiki/Jackknife_resampling.
 - Parallelize the code with `OpenMP` and `MPI` in `C`.
 - Wrap the parallelized `C` with `Python`, which works better in loading data and plotting results.
+
+- We made a GitHub repo for this project, https://github.com/Yucheng-Zhang/corrknife.
