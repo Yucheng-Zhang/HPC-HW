@@ -25,4 +25,15 @@
 
 ## 2. 2D Jacobi method on a GPU.
 
+- For this problem, I run it on the same five GPUs as used in Problem 1.
+- 
+
+
 ## 3. Pitch your final project.
+
+For the final project, `Kaizhe Wang` and I will do the computation of correlation function of galaxies, which is the HPC application I mentioned in the first homework. The most computation intensive part is to calculate the distance between two sets of points and fit them into proper bins. The things we plan to do include,
+
+- Figure out the mesh algorithm. Naive pair count requires `O(N^2)` time complexity, where `N` is the size of the data. With the mesh algorithm, we hope to reduce the time complexity to `O(NlogN)`.
+- Include jackknife resampling in the code. The input data points are divided into `njk` parts, where `njk` stands for the number of jackknife regions. For more information about jackknife resampling, see https://en.wikipedia.org/wiki/Jackknife_resampling.
+- Parallelize the code with `OpenMP` and `MPI` in `C`.
+- Wrap the parallelized `C` with `Python`, which works better in loading data and plotting results.
