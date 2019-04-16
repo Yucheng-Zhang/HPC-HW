@@ -16,7 +16,7 @@ void read_image(const int N, RGBImage* I) {
 
   I->A = (float*) malloc(N*N*sizeof(float));
   for (long i = 0; i < N*N; i++) {
-    I->A[i] = 0.
+    I->A[i] = 0.;
   }
 }
 
@@ -38,9 +38,8 @@ float filter[FWIDTH][FWIDTH] = {
 
 void CPU_convolution(float* I, const float* I0, long Xsize, long Ysize) {
   constexpr long FWIDTH_HALF = (FWIDTH-1)/2;
-  long N = Xsize * Ysize;
   float h2 = 0.25 / ((Xsize + 1)*(Ysize + 1));
-  #pragma omp parallel for collapse(3) schedule(static)
+  #pragma omp parallel for collapse(2) schedule(static)
   for (long i0 = 0; i0 <= Xsize-FWIDTH; i0++) {
     for (long i1 = 0; i1 <= Ysize-FWIDTH; i1++) {
       float sum = 0;
@@ -102,7 +101,7 @@ __global__ void GPU_convolution(float* I, const float* I0, long Xsize, long Ysiz
 
 int main() {
   long repeat = 500;
-  long N = 100;
+  long N = 1000;
 
   // Load image from file
   RGBImage I0, I1, I1_ref;
@@ -153,10 +152,6 @@ int main() {
   cudaMemcpy(I1.A, I1gpu, Xsize*Ysize*sizeof(float), cudaMemcpyDeviceToHost);
   for (long i = 0; i < Xsize*Ysize; i++) err = std::max(err, fabs(I1.A[i] - I1_ref.A[i]));
   printf("Error = %e\n", err);
-
-  // Write output
-  write_image("CPU.ppm", I1_ref);
-  write_image("GPU.ppm", I1);
 
   // Free memory
   cudaStreamDestroy(streams[0]);
