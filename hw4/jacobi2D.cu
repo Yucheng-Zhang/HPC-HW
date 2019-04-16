@@ -100,7 +100,7 @@ __global__ void GPU_convolution(float* I, const float* I0, long Xsize, long Ysiz
 
 
 int main() {
-  long repeat = 500;
+  long repeat = 1000;
   long N = 1000;
 
   // Load image from file
