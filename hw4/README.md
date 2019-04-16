@@ -37,6 +37,12 @@
 
 - For this problem, I run it on the same five GPUs as used in Problem 1.
 - I modified the convolution code in `filter.cu` as shown in the lecture, with loading piece of data into shared memory in GPU. This dramatically speeds up the coda.
+- The performance of the code is shown in the table below.
+
+|         `GPU`          | `cuda1` | `cuda2` | `cuda3` | `cuda4` | `cuda5` |
+| :--------------------: | :-----: | :-----: | :-----: | :-----: | :-----: |
+| `CPU flops (GFlops/s)` |         |         |         |         |         |
+| `GPU flops (GFlops/s)` |         |         |         |         |         |
 
 
 ## 3. Pitch your final project.
