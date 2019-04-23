@@ -1,11 +1,11 @@
 CXX = mpic++ # or mpicxx
-CXXFLAGS = -std=c++11 -O3 # -march=native -fopenmp
+CXXFLAGS = -std=c++11 -O3 -march=native -fopenmp
 
-TARGETS = $(basename $(wildcard *.c))
+TARGETS = $(basename $(wildcard *.cpp))
 
 all : $(TARGETS)
 
-%:%.c *.h
+%:%.cpp *.h
 	$(CXX) $(CXXFLAGS) $< $(LIBS) -o $@
 
 clean:
