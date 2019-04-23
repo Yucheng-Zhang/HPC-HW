@@ -49,9 +49,9 @@ int main(int argc, char *argv[]) {
     t.tic();
   }
   for (long i = 0; i < n_itr1; i++) {
-    MPI_Recv(&looparr, arr_size, MPI_DOUBLE, (rank - 1 + size) % size, 999,
+    MPI_Recv(looparr, arr_size, MPI_DOUBLE, (rank - 1 + size) % size, 999,
              MPI_COMM_WORLD, &status);
-    MPI_Send(&looparr, arr_size, MPI_DOUBLE, (rank + 1) % size, 999,
+    MPI_Send(looparr, arr_size, MPI_DOUBLE, (rank + 1) % size, 999,
              MPI_COMM_WORLD);
   }
   if (rank == 0) {
