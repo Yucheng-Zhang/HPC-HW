@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   for (long i = 0; i < n_itr1; i++) {
     MPI_Recv(looparr, arr_size, MPI_DOUBLE, (rank - 1 + size) % size, 999,
              MPI_COMM_WORLD, &status);
-    if (rank == 0 && i == n_itr - 1)
+    if (rank == 0 && i == n_itr1 - 1)
       break;
     else
       MPI_Send(looparr, arr_size, MPI_DOUBLE, (rank + 1) % size, 999,
