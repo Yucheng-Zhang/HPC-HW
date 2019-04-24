@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   /*** loop integer ***/
-  long n_itr = 3;
+  long n_itr = 10000;
   long looper;
   MPI_Status status;
   Timer t;
@@ -25,8 +25,10 @@ int main(int argc, char *argv[]) {
     MPI_Recv(&looper, 1, MPI_LONG, (rank - 1 + size) % size, 999,
              MPI_COMM_WORLD, &status);
     looper += rank;
-    if (rank ==0 && i==n_itr-1) break;
-    else MPI_Send(&looper, 1, MPI_LONG, (rank + 1) % size, 999, MPI_COMM_WORLD);
+    if (rank == 0 && i == n_itr - 1)
+      break;
+    else
+      MPI_Send(&looper, 1, MPI_LONG, (rank + 1) % size, 999, MPI_COMM_WORLD);
   }
   if (rank == 0) {
     double tt = t.toc();
@@ -39,10 +41,9 @@ int main(int argc, char *argv[]) {
     printf(">> Latency: %f s\n", tt / (size * n_itr));
   }
 
-
   /*** loop array ***/
 
-  long n_itr1 = 3;
+  long n_itr1 = 100;
   long arr_size = (1UL << 18);
   double *looparr = (double *)malloc(arr_size * sizeof(double)); // about 2 MB
 
@@ -54,9 +55,11 @@ int main(int argc, char *argv[]) {
   for (long i = 0; i < n_itr1; i++) {
     MPI_Recv(looparr, arr_size, MPI_DOUBLE, (rank - 1 + size) % size, 999,
              MPI_COMM_WORLD, &status);
-    if (rank ==0 && i==n_itr-1) break;
-    else MPI_Send(looparr, arr_size, MPI_DOUBLE, (rank + 1) % size, 999,
-             MPI_COMM_WORLD);
+    if (rank == 0 && i == n_itr - 1)
+      break;
+    else
+      MPI_Send(looparr, arr_size, MPI_DOUBLE, (rank + 1) % size, 999,
+               MPI_COMM_WORLD);
   }
   if (rank == 0) {
     double tt = t.toc();
