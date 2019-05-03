@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 
     /* Jacobi step for local points */
     for (int i = 1; i <= lN; i++) {
-      for (int j = 1; j <= lN; i++) {
+      for (int j = 1; j <= lN; j++) {
         lunew[i * (lN + 2) + j] =
             0.25 *
             (hsq + lu[(i - 1) * (lN + 2) + j] + lu[i * (lN + 2) + j - 1] +
