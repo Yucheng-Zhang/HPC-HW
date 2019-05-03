@@ -96,9 +96,15 @@ int main(int argc, char *argv[]) {
     }
 
     /* prepare left and right */
-    for (int i = 0; i < lN; i++) {
-      clt[i] = lunew[(i + 1) * (lN + 2) + 1];
-      crt[i] = lunew[(i + 1) * (lN + 2) + lN];
+    if (!(pos[2])) {
+      for (int i = 0; i < lN; i++) {
+        clt[i] = lunew[(i + 1) * (lN + 2) + 1];
+      }
+    }
+    if (!(pos[3])) {
+      for (int i = 0; i < lN; i++) {
+        crt[i] = lunew[(i + 1) * (lN + 2) + lN];
+      }
     }
 
     /* communicate ghost values */
