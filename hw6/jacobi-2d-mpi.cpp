@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   lp = int(sqrt(p)); // number of tasks in each direction
   N = lp * lN;
   if (mpirank == 0) {
-    printf("N: %d, p: %d, local N: %d\n", N, lN, p);
+    printf("N: %d, p: %d, local N: %d\n", N, p, lN);
   }
   /* timing */
   MPI_Barrier(MPI_COMM_WORLD);
