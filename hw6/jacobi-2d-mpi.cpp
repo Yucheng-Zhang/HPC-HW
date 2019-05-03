@@ -75,12 +75,12 @@ int main(int argc, char *argv[]) {
   /* for left and right communication */
   double *clt, *clt1, *crt, *crt1;
   if (!(pos[2])) {
-    double *clt = (double *)calloc(sizeof(double), lN);
-    double *clt1 = (double *)calloc(sizeof(double), lN);
+    clt = (double *)calloc(sizeof(double), lN);
+    clt1 = (double *)calloc(sizeof(double), lN);
   }
   if (!(pos[3])) {
-    double *crt = (double *)calloc(sizeof(double), lN);
-    double *crt1 = (double *)calloc(sizeof(double), lN);
+    crt = (double *)calloc(sizeof(double), lN);
+    crt1 = (double *)calloc(sizeof(double), lN);
   }
 
   for (int iter = 0; iter < max_iters && gres / gres0 > tol; iter++) {
@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
     }
 
     /* prepare left and right */
-    for (int i = 1; i <= lN; i++) {
-      clt[i] = lunew[i * (lN + 2) + 1];
-      crt[i] = lunew[i * (lN + 2) + lN];
+    for (int i = 0; i < lN; i++) {
+      clt[i] = lunew[(i + 1) * (lN + 2) + 1];
+      crt[i] = lunew[(i + 1) * (lN + 2) + lN];
     }
 
     /* communicate ghost values */
