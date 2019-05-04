@@ -8,7 +8,7 @@
 
 - Weak scaling study
   - On Prince, we ask for `4` nodes and use option `-oversubscribe` to run MPI with tasks more than `4`.
-  - The table and figure below shows the timings with `10,000` runs and `Nl = 100` for different number of processes (tasks).
+  - The table and log-log plot below shows the timings with `10,000` runs and `Nl = 100` for different number of processes (tasks).
 
 |     `np`     |   `4`    |   `16`   |   `64`   |   `256`   |
 | :----------: | :------: | :------: | :------: | :-------: |
@@ -18,5 +18,15 @@
 
 
 - Strong scaling study
+  - Same as weak scaling, we ask for `4` nodes and use option `-oversubscribe` to run MPI with tasks more than `4`.
+  - We fix the problem size at `N = 4096` and increase the number of MPI tasks. The table and log-log plot below shows the timings with `10,000` runs.
+
+|     `np`     |    `4`    |   `16`   |   `64`   |  `256`   |
+| :----------: | :-------: | :------: | :------: | :------: |
+| `Timing (s)` | `18.2533` | `4.5006` | `3.5988` | `8.9411` |
+
+![strong_scaling.png](strong_scaling.png)
 
 ## 2. Parallel sample sort.
+
+

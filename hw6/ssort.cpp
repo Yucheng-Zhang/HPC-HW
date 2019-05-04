@@ -1,11 +1,11 @@
 // Parallel sample sort
-#include <stdio.h>
-#include <unistd.h>
-#include <mpi.h>
-#include <stdlib.h>
 #include <algorithm>
+#include <mpi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-int main( int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
   MPI_Init(&argc, &argv);
 
   int rank, p;
@@ -14,11 +14,12 @@ int main( int argc, char *argv[]) {
 
   // Number of random numbers per processor (this should be increased
   // for actual tests or could be passed in through the command line
-  int N = 100;
+  int N;
+  sscanf(argv[1], "d", &N);
 
-  int* vec = (int*)malloc(N*sizeof(int));
+  int *vec = (int *)malloc(N * sizeof(int));
   // seed random number generator differently on every core
-  srand((unsigned int) (rank + 393919));
+  srand((unsigned int)(rank + 393919));
 
   // fill vector with random integers
   for (int i = 0; i < N; ++i) {
@@ -27,18 +28,38 @@ int main( int argc, char *argv[]) {
   printf("rank: %d, first entry: %d\n", rank, vec[0]);
 
   // sort locally
-  std::sort(vec, vec+N);
+  std::sort(vec, vec + N);
 
   // sample p-1 entries from vector as the local splitters, i.e.,
   // every N/P-th entry of the sorted vector
+  int *lsp = (int *)malloc((p - 1) * sizeof(int));
+  int step = N / p + 1;
+  for (int j = 0, i = step - 1; j < p - 1; j++) {
+    lsp[j] = vec[i];
+    i += step;
+  }
 
   // every process communicates the selected entries to the root
   // process; use for instance an MPI_Gather
+  int *gsps = NULL;
+  if (rank == 0) {
+    gsps = (int *)malloc(p * (p - 1) * sizeof(int));
+  }
+  MPI_Gather(lsp, p - 1, MPI_INT, gsps, p - 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   // root process does a sort and picks (p-1) splitters (from the
   // p(p-1) received elements)
+  int *gsp = (int *)malloc((p - 1) * sizeof(int));
+  if (rank == 0) {
+    std::sort(gsps, gsps + p * (p - 1));
+    for (int j = 0, i = p - 2; j < p - 1; j++) {
+      gsp[j] = gsps[i];
+      i += p;
+    }
+  }
 
   // root process broadcasts splitters to all other processes
+  MPI_Bcast(gsp, p - 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   // every process uses the obtained splitters to decide which
   // integers need to be sent to which other process (local bins).
