@@ -26,6 +26,9 @@ int main(int argc, char *argv[]) {
     vec[i] = rand();
   }
   printf("rank: %d, first entry: %d\n", rank, vec[0]);
+  /* timing */
+  MPI_Barrier(MPI_COMM_WORLD);
+  double tt = MPI_Wtime();
 
   // sort locally
   std::sort(vec, vec + N);
@@ -73,16 +76,57 @@ int main(int argc, char *argv[]) {
   // counts and displacements. For a splitter s[i], the corresponding
   // send-displacement for the message to process (i+1) is then given by,
   // sdispls[i+1] = std::lower_bound(vec, vec+N, s[i]) - vec;
+  int *sdispls = (int *)malloc(p * sizeof(int));
+  sdispls[0] = 0;
+  for (int i = 0; i < p - 1; i++) {
+    sdispls[i + 1] = std::lower_bound(vec, vec + N, gsp[i]) - vec;
+  }
+  int *scounts = (int *)malloc(p * sizeof(int));
+  for (int i = 0; i < p - 1; i++) {
+    scounts[i] = sdispls[i + 1] - sdispls[i];
+  }
+  scounts[p - 1] = N - sdispls[p - 1];
 
   // send and receive: first use an MPI_Alltoall to share with every
   // process how many integers it should expect, and then use
   // MPI_Alltoallv to exchange the data
+  int *rcounts = (int *)malloc(p * sizeof(int));
+  MPI_Alltoall(scounts, 1, MPI_INT, rcounts, 1, MPI_INT, MPI_COMM_WORLD);
+
+  int rctot = 0;
+  int *rdispls = (int *)malloc(p * sizeof(int));
+  rdispls[0] = 0;
+  for (int i = 1; i < p; i++) {
+    rctot += rcounts[i - 1];
+    rdispls[i] = rctot;
+  }
+  rctot += rcounts[p - 1];
+  int *vec2 = (int *)malloc(rctot * sizeof(int));
+
+  MPI_Alltoallv(vec, scounts, sdispls, MPI_INT, vec2, rcounts, rdispls, MPI_INT,
+                MPI_COMM_WORLD);
 
   // do a local sort of the received data
+  std::sort(vec2, vec2 + rctot);
+
+  /* timing */
+  MPI_Barrier(MPI_COMM_WORLD);
+  double elapsed = MPI_Wtime() - tt;
+  if (0 == rank) {
+    printf("Time elapsed is %f seconds.\n", elapsed);
+  }
 
   // every process writes its result to a file
+  char fn[1024];
+  snprintf(fn, 1024, "ssort_rank_%02d.txt", rank);
+  FILE *fd = fopen(fn, "w");
+  for (int i = 0; i < rctot; i++) {
+    fprintf(fd, "%d\n", vec2[i]);
+  }
+  fclose(fd);
 
   free(vec);
+  free(vec2);
   MPI_Finalize();
   return 0;
 }
