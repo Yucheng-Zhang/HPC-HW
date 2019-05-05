@@ -29,4 +29,10 @@
 
 ## 2. Parallel sample sort.
 
+- We ask for `64` cores with `--nodes=4 --tasks-per-node=16 --cpus-per-task=1`. I tried `--nodes=64 --tasks-per-node=1` to make sure that data was transfered through network, but the job was killed by the Prince manager...
 
+|    `N`     |   `10^4`   |   `10^5`   |   `10^6`   |   `10^7`   |
+| :--------: | :--------: | :--------: | :--------: | :--------: |
+| `Time (s)` | `1.255633` | `1.382723` | `1.625102` | `4.226203` |
+
+![ssort_timing.png](ssort_timing.png)
