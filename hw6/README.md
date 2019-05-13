@@ -4,6 +4,10 @@
 
 ## 0. Final project update.
 
+- We have finished the serial code with lattice mesh algorithm, and tested the code by comparing to results from other widely used code.
+- We have parallelized the code with MPI, and tested the code.
+- Next step is to use OpenMP in order to save memory on a single node. For now the same data is loaded by all MPI tasks.
+
 ## 1. MPI-parallel two-dimensional Jacobi smoother.
 
 - Weak scaling study
